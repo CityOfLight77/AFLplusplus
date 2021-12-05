@@ -211,6 +211,18 @@ void init_count_class16(void) {
 
 inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
 
+  u32 i, ret = 0;
+  for (i = 0; i < afl->fsrv.real_map_size; ++i) {
+    if (unlikely(afl->fsrv.trace_bits[i] > virgin_map[i])) {
+      if (unlikely(!virgin_map[i])) {
+        afl->bitmap_changed = 1;
+      }
+      virgin_map[i] = afl->fsrv.trace_bits[i];
+      ret = 1;
+    }
+  }
+  return ret;
+#if 0
 #ifdef WORD_SIZE_64
 
   u64 *current = (u64 *)afl->fsrv.trace_bits;
@@ -241,6 +253,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
     afl->bitmap_changed = 1;
 
   return ret;
+#endif
 
 }
 
@@ -255,6 +268,19 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
  * return has_new_bits(). */
 
 inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map) {
+
+  u32 i, ret = 0;
+  for (i = 0; i < afl->fsrv.real_map_size; ++i) {
+    if (unlikely(afl->fsrv.trace_bits[i] > virgin_map[i])) {
+      if (unlikely(!virgin_map[i])) {
+        afl->bitmap_changed = 1;
+      }
+      virgin_map[i] = afl->fsrv.trace_bits[i];
+      ret = 1;
+    }
+  }
+  return ret;
+#if 0
 
   /* Handle the hot path first: no new coverage */
   u8 *end = afl->fsrv.trace_bits + afl->fsrv.map_size;
@@ -272,7 +298,7 @@ inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
   classify_counts(&afl->fsrv);
   return has_new_bits(afl, virgin_map);
-
+#endif
 }
 
 /* Compact trace bytes into a smaller bitmap. We effectively just drop the
