@@ -9,8 +9,6 @@ u32 skim(const u64 *virgin, const u64 *current, const u64 *current_end);
 u64 classify_word(u64 word);
 
 inline u64 classify_word(u64 word) {
-  return 0;
-#if 0
   u16 mem16[4];
   memcpy(mem16, &word, sizeof(mem16));
 
@@ -21,14 +19,9 @@ inline u64 classify_word(u64 word) {
 
   memcpy(&word, mem16, sizeof(mem16));
   return word;
-#endif
 }
 
 void simplify_trace(afl_state_t *afl, u8 *bytes) {
-
-  return;
-#if 0
-
   u64 *mem = (u64 *)bytes;
   u32  i = (afl->fsrv.map_size >> 3);
 
@@ -56,13 +49,10 @@ void simplify_trace(afl_state_t *afl, u8 *bytes) {
     mem++;
 
   }
-#endif
 
 }
 
 inline void classify_counts(afl_forkserver_t *fsrv) {
-  return;
-#if 0
   u64 *mem = (u64 *)fsrv->trace_bits;
   u32  i = (fsrv->map_size >> 3);
 
@@ -75,14 +65,13 @@ inline void classify_counts(afl_forkserver_t *fsrv) {
     mem++;
 
   }
-#endif
 }
 
 /* Updates the virgin bits, then reflects whether a new count or a new tuple is
  * seen in ret. */
-inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
-  return;
+
 #if 0
+inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
 
   /* Optimize for (*current & *virgin) == 0 - i.e., no bits in current bitmap
      that have not been already cleared from the virgin map - since this will
@@ -111,8 +100,8 @@ inline void discover_word(u8 *ret, u64 *current, u64 *virgin) {
     *virgin &= ~*current;
 
   }
-#endif
 }
+#endif
 
 #if defined(__AVX512F__) && defined(__AVX512DQ__)
   #define PACK_SIZE 64

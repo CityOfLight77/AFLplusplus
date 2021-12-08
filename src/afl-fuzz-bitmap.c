@@ -267,6 +267,7 @@ inline u8 has_new_bits(afl_state_t *afl, u8 *virgin_map) {
  * on rare cases it fall backs to the slow path: classify_counts() first, then
  * return has_new_bits(). */
 
+#if 0
 inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map) {
 
   u32 i, ret = 0;
@@ -280,7 +281,6 @@ inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map) {
     }
   }
   return ret;
-#if 0
 
   /* Handle the hot path first: no new coverage */
   u8 *end = afl->fsrv.trace_bits + afl->fsrv.map_size;
@@ -298,8 +298,8 @@ inline u8 has_new_bits_unclassified(afl_state_t *afl, u8 *virgin_map) {
 #endif                                                     /* ^WORD_SIZE_64 */
   classify_counts(&afl->fsrv);
   return has_new_bits(afl, virgin_map);
-#endif
 }
+#endif
 
 /* Compact trace bytes into a smaller bitmap. We effectively just drop the
    count information here. This is called only sporadically, for some
@@ -480,7 +480,7 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
 
   u8  fn[PATH_MAX];
   u8 *queue_fn = "";
-  u8  new_bits = 0, keeping = 0, res, classified = 0;
+  u8  new_bits = 0, keeping = 0, res;
   s32 fd;
   u64 cksum = 0;
 
@@ -503,7 +503,8 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
     /* Keep only if there are new bits in the map, add to queue for
        future fuzzing, etc. */
 
-    new_bits = has_new_bits_unclassified(afl, afl->virgin_bits);
+    classify_counts(&afl->fsrv);
+    new_bits = has_new_bits(afl, afl->virgin_bits);
 
     if (likely(!new_bits)) {
 
@@ -511,8 +512,6 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
       return 0;
 
     }
-
-    classified = new_bits;
 
 #ifndef SIMPLE_FILES
 
@@ -616,16 +615,9 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
 
       if (likely(!afl->non_instrumented_mode)) {
 
-        if (!classified) {
-
-          classify_counts(&afl->fsrv);
-          classified = 1;
-
-        }
-
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_tmout)) { return keeping; }
+        if (!new_bits) { return keeping; }
 
       }
 
@@ -717,11 +709,9 @@ save_if_interesting(afl_state_t *afl, void *mem, u32 len, u8 fault) {
 
       if (likely(!afl->non_instrumented_mode)) {
 
-        if (!classified) { classify_counts(&afl->fsrv); }
-
         simplify_trace(afl, afl->fsrv.trace_bits);
 
-        if (!has_new_bits(afl, afl->virgin_crash)) { return keeping; }
+        if (!new_bits) { return keeping; }
 
       }
 
